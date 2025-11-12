@@ -96,6 +96,131 @@ Object.keys(langButtons).forEach(lang => {
 });
 
 
+const getLocationBtn = document.getElementById('getLocationBtn');
+const addressCard = document.getElementById('addressCard');
+const addressDetails = document.getElementById('address-details');
+const copyBtn = document.getElementById('copyBtn');
+const errorDiv = document.getElementById('error');
+const copyFeedback = document.getElementById('copyFeedback');
+const loader = document.getElementById('loader');
+const langButtons = {
+    en: document.getElementById('lang-en'),
+    ar: document.getElementById('lang-ar'),
+};
+const themeToggle = document.getElementById('theme-toggle');
+
+let currentAddress = {};
+let currentLang = 'ar'; 
+
+const translations = {
+    ar: {
+        pageTitle: "أين أنا؟ | تحديد الموقع",
+        mainTitle: "أين أنا؟",
+        subtitle: "اضغط على الزر للحصول على عنوانك الفعلي بسهولة.",
+        getLocationBtn: "احصل على عنواني الآن",
+        cardTitle: "عنوانك الحالي",
+        copyBtn: "نسخ العنوان",
+        copyFeedback: "تم النسخ بنجاح!",
+        copyFail: "فشل النسخ!",
+        errorBrowser: "المتصفح لا يدعم تحديد الموقع الجغرافي.",
+        errorFetch: "حدث خطأ أثناء جلب العنوان.",
+        errorPermission: "لقد رفضت طلب تحديد الموقع. يرجى السماح بالوصول للمتابعة.",
+        errorPosition: "معلومات الموقع غير متاحة حالياً.",
+        errorTimeout: "انتهى وقت طلب تحديد الموقع. يرجى المحاولة مرة أخرى.",
+        errorUnknown: "حدث خطأ غير معروف.",
+        addressLabels: {
+            road: 'الشارع',
+            house_number: 'رقم المبنى',
+            suburb: 'الحي',
+            city: 'المدينة',
+            state: 'المنطقة/الولاية',
+            postcode: 'الرمز البريدي',
+            country: 'الدولة',
+        }
+    },
+    en: {
+        pageTitle: "Where Am I? | Geolocation",
+        mainTitle: "Where Am I?",
+        subtitle: "Press the button to get your physical address easily.",
+        getLocationBtn: "Get My Address Now",
+        cardTitle: "Your Current Address",
+        copyBtn: "Copy Address",
+        copyFeedback: "Copied successfully!",
+        copyFail: "Copy failed!",
+        errorBrowser: "Geolocation is not supported by this browser.",
+        errorFetch: "Error fetching the address.",
+        errorPermission: "You denied the location request. Please allow access to continue.",
+        errorPosition: "Location information is currently unavailable.",
+        errorTimeout: "The request to get user location timed out. Please try again.",
+        errorUnknown: "An unknown error occurred.",
+        addressLabels: {
+            road: 'Road',
+            house_number: 'House Number',
+            suburb: 'Suburb',
+            city: 'City',
+            state: 'State/Region',
+            postcode: 'Postal Code',
+            country: 'Country',
+        }
+    }
+};
+
+// --- Theme Switcher ---
+function setAppTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+}
+
+function toggleTheme() {
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    setAppTheme(newTheme);
+}
+
+themeToggle.addEventListener('click', toggleTheme);
+
+// Set initial theme on load
+(function () {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme) {
+        setAppTheme(savedTheme);
+    } else {
+        setAppTheme(prefersDark ? 'dark' : 'light');
+    }
+})();
+
+
+function switchLanguage(lang) {
+    if (!['ar', 'en'].includes(lang)) return;
+
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+    // Update buttons state
+    langButtons.ar.classList.toggle('active', lang === 'ar');
+    langButtons.en.classList.toggle('active', lang === 'en');
+
+    // Update all text content
+    document.querySelectorAll('[data-key]').forEach(element => {
+        const key = element.getAttribute('data-key');
+        if (translations[lang][key]) {
+            element.textContent = translations[lang][key];
+        }
+    });
+
+    // If an address is already displayed, re-render it in the new language
+    if (Object.keys(currentAddress).length > 0) {
+        displayAddress(currentAddress.ar, currentAddress.en);
+    }
+}
+
+Object.keys(langButtons).forEach(lang => {
+    langButtons[lang].addEventListener('click', () => switchLanguage(lang));
+});
+
+
 getLocationBtn.addEventListener('click', () => {
     addressCard.classList.add('hidden');
     errorDiv.classList.add('hidden');
