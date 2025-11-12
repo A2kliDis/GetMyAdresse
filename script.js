@@ -103,12 +103,14 @@ const copyBtn = document.getElementById('copyBtn');
 const errorDiv = document.getElementById('error');
 const copyFeedback = document.getElementById('copyFeedback');
 const loader = document.getElementById('loader');
+const mapContainer = document.getElementById('map');
 const langButtons = {
     en: document.getElementById('lang-en'),
     ar: document.getElementById('lang-ar'),
 };
 const themeToggle = document.getElementById('theme-toggle');
 
+let map;
 let currentAddress = {};
 let currentLang = 'ar'; 
 
@@ -225,6 +227,7 @@ getLocationBtn.addEventListener('click', () => {
     addressCard.classList.add('hidden');
     errorDiv.classList.add('hidden');
     copyFeedback.classList.add('hidden');
+    mapContainer.classList.add('hidden');
     addressDetails.innerHTML = '';
     
     getLocationBtn.classList.add('hidden');
@@ -233,7 +236,7 @@ getLocationBtn.addEventListener('click', () => {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(showPosition, showError, {
             enableHighAccuracy: true,
-            timeout: 10000,
+            timeout: 20000,
             maximumAge: 0
         });
     } else {
@@ -244,6 +247,21 @@ getLocationBtn.addEventListener('click', () => {
 function showPosition(position) {
     const lat = position.coords.latitude;
     const lon = position.coords.longitude;
+
+    // Initialize map
+    mapContainer.classList.remove('hidden');
+    if (map) {
+        map.remove();
+    }
+    map = L.map('map').setView([lat, lon], 16);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    L.marker([lat, lon]).addTo(map)
+        .bindPopup('موقعك التقريبي')
+        .openPopup();
 
     const arUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=ar&addressdetails=1`;
     const enUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=en&addressdetails=1`;
