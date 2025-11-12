@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-key="pageTitle">أين أنا؟ | تحديد الموقع</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="lang-switcher">
+        <button id="lang-en">EN</button>
+        <button id="lang-ar" class="active">AR</button>
+    </div>
+    <main class="container">
+        <div class="content-wrapper">
+            <header>
+                <h1 data-key="mainTitle">أين أنا؟</h1>
+                <p class="subtitle" data-key="subtitle">اضغط على الزر للحصول على عنوانك الفعلي بسهولة.</p>
+            </header>
+            
+            <button id="getLocationBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <span data-key="getLocationBtn">احصل على عنواني الآن</span>
+            </button>
+
+            <div id="loader" class="loader hidden"></div>
+            
+            <div id="addressCard" class="card hidden">
+                <div class="card-header">
+                    <h2 data-key="cardTitle">عنوانك الحالي</h2>
+                </div>
+                <div id="address-details"></div>
+                <button id="copyBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span data-key="copyBtn">نسخ العنوان</span>
+                </button>
+                <span id="copyFeedback" class="hidden" data-key="copyFeedback">تم النسخ بنجاح!</span>
+            </div>
+            
+            <p id="error" class="error hidden"></p>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
