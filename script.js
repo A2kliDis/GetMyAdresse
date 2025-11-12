@@ -5,104 +5,6 @@ const copyBtn = document.getElementById('copyBtn');
 const errorDiv = document.getElementById('error');
 const copyFeedback = document.getElementById('copyFeedback');
 const loader = document.getElementById('loader');
-const langButtons = {
-    en: document.getElementById('lang-en'),
-    ar: document.getElementById('lang-ar'),
-};
-
-let currentAddress = {};
-let currentLang = 'ar'; 
-
-const translations = {
-    ar: {
-        pageTitle: "أين أنا؟ | تحديد الموقع",
-        mainTitle: "أين أنا؟",
-        subtitle: "اضغط على الزر للحصول على عنوانك الفعلي بسهولة.",
-        getLocationBtn: "احصل على عنواني الآن",
-        cardTitle: "عنوانك الحالي",
-        copyBtn: "نسخ العنوان",
-        copyFeedback: "تم النسخ بنجاح!",
-        copyFail: "فشل النسخ!",
-        errorBrowser: "المتصفح لا يدعم تحديد الموقع الجغرافي.",
-        errorFetch: "حدث خطأ أثناء جلب العنوان.",
-        errorPermission: "لقد رفضت طلب تحديد الموقع. يرجى السماح بالوصول للمتابعة.",
-        errorPosition: "معلومات الموقع غير متاحة حالياً.",
-        errorTimeout: "انتهى وقت طلب تحديد الموقع. يرجى المحاولة مرة أخرى.",
-        errorUnknown: "حدث خطأ غير معروف.",
-        addressLabels: {
-            road: 'الشارع',
-            house_number: 'رقم المبنى',
-            suburb: 'الحي',
-            city: 'المدينة',
-            state: 'المنطقة/الولاية',
-            postcode: 'الرمز البريدي',
-            country: 'الدولة',
-        }
-    },
-    en: {
-        pageTitle: "Where Am I? | Geolocation",
-        mainTitle: "Where Am I?",
-        subtitle: "Press the button to get your physical address easily.",
-        getLocationBtn: "Get My Address Now",
-        cardTitle: "Your Current Address",
-        copyBtn: "Copy Address",
-        copyFeedback: "Copied successfully!",
-        copyFail: "Copy failed!",
-        errorBrowser: "Geolocation is not supported by this browser.",
-        errorFetch: "Error fetching the address.",
-        errorPermission: "You denied the location request. Please allow access to continue.",
-        errorPosition: "Location information is currently unavailable.",
-        errorTimeout: "The request to get user location timed out. Please try again.",
-        errorUnknown: "An unknown error occurred.",
-        addressLabels: {
-            road: 'Road',
-            house_number: 'House Number',
-            suburb: 'Suburb',
-            city: 'City',
-            state: 'State/Region',
-            postcode: 'Postal Code',
-            country: 'Country',
-        }
-    }
-};
-
-function switchLanguage(lang) {
-    if (!['ar', 'en'].includes(lang)) return;
-
-    currentLang = lang;
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-
-    // Update buttons state
-    langButtons.ar.classList.toggle('active', lang === 'ar');
-    langButtons.en.classList.toggle('active', lang === 'en');
-
-    // Update all text content
-    document.querySelectorAll('[data-key]').forEach(element => {
-        const key = element.getAttribute('data-key');
-        if (translations[lang][key]) {
-            element.textContent = translations[lang][key];
-        }
-    });
-
-    // If an address is already displayed, re-render it in the new language
-    if (Object.keys(currentAddress).length > 0) {
-        displayAddress(currentAddress.ar, currentAddress.en);
-    }
-}
-
-Object.keys(langButtons).forEach(lang => {
-    langButtons[lang].addEventListener('click', () => switchLanguage(lang));
-});
-
-
-const getLocationBtn = document.getElementById('getLocationBtn');
-const addressCard = document.getElementById('addressCard');
-const addressDetails = document.getElementById('address-details');
-const copyBtn = document.getElementById('copyBtn');
-const errorDiv = document.getElementById('error');
-const copyFeedback = document.getElementById('copyFeedback');
-const loader = document.getElementById('loader');
 const mapContainer = document.getElementById('map');
 const langButtons = {
     en: document.getElementById('lang-en'),
@@ -134,7 +36,9 @@ const translations = {
             road: 'الشارع',
             house_number: 'رقم المبنى',
             suburb: 'الحي',
+            city_district: 'حي المدينة',
             city: 'المدينة',
+            county: 'المحافظة',
             state: 'المنطقة/الولاية',
             postcode: 'الرمز البريدي',
             country: 'الدولة',
@@ -159,7 +63,9 @@ const translations = {
             road: 'Road',
             house_number: 'House Number',
             suburb: 'Suburb',
+            city_district: 'City District',
             city: 'City',
+            county: 'County',
             state: 'State/Region',
             postcode: 'Postal Code',
             country: 'Country',
@@ -249,11 +155,14 @@ function showPosition(position) {
     const lon = position.coords.longitude;
 
     // Initialize map
-    mapContainer.classList.remove('hidden');
     if (map) {
         map.remove();
     }
+    mapContainer.classList.remove('hidden');
     map = L.map('map').setView([lat, lon], 16);
+    
+    // This is crucial to fix rendering issues when the map container was hidden
+    map.invalidateSize();
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -263,8 +172,8 @@ function showPosition(position) {
         .bindPopup('موقعك التقريبي')
         .openPopup();
 
-    const arUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=ar&addressdetails=1`;
-    const enUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=en&addressdetails=1`;
+    const arUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=ar&addressdetails=1&polygon_geojson=1`;
+    const enUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=en&addressdetails=1&polygon_geojson=1`;
 
     Promise.all([fetch(arUrl), fetch(enUrl)])
         .then(responses => Promise.all(responses.map(res => res.json())))
@@ -273,6 +182,23 @@ function showPosition(position) {
                 currentAddress = { ar: arData.address, en: enData.address };
                 displayAddress(arData.address, enData.address);
                 addressCard.classList.remove('hidden');
+
+                // Add administrative boundary to the map
+                if (arData.geojson) {
+                    const geojsonLayer = L.geoJSON(arData.geojson, {
+                        style: function (feature) {
+                            return {
+                                color: "var(--primary-color)",
+                                weight: 4,
+                                opacity: 0.7,
+                                fillOpacity: 0.1
+                            };
+                        }
+                    }).addTo(map);
+                    // Zoom the map to the boundary
+                    map.fitBounds(geojsonLayer.getBounds());
+                }
+
             } else {
                 showError({ message: translations[currentLang].errorFetch });
             }
@@ -289,7 +215,7 @@ function displayAddress(arAddress, enAddress) {
     const lang = currentLang;
     const labels = translations[lang].addressLabels;
     
-    const addressMap = ['country', 'state', 'city', 'suburb', 'road', 'house_number', 'postcode'];
+    const addressMap = ['country', 'state', 'county', 'city', 'city_district', 'suburb', 'road', 'house_number', 'postcode'];
 
     addressMap.forEach(key => {
         const arValue = arAddress[key];
@@ -336,7 +262,7 @@ function getFullAddressForCopy() {
 
     const labels = translations[lang].addressLabels;
     const addressParts = [];
-    const addressMap = ['country', 'state', 'city', 'suburb', 'road', 'house_number', 'postcode'];
+    const addressMap = ['country', 'state', 'county', 'city', 'city_district', 'suburb', 'road', 'house_number', 'postcode'];
 
     addressMap.forEach(key => {
         if (address[key]) {
